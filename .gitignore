@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/My_Compiler_BigHW/program.asm
+/My_Compiler_BigHW/SLR1_analyse.txt
+/My_Compiler_BigHW/DFA.txt
