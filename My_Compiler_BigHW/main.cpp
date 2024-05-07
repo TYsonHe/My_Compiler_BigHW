@@ -4,11 +4,14 @@
 int main() {
 	LexicalAnalyser lexicalAnalyser("test.txt");
 	lexicalAnalyser.analyse();
+	lexicalAnalyser.outputToScreen();
+	lexicalAnalyser.outputToFile("Lexical_analyse.txt");
 
 	ParserAndSemanticAnalyser parserAndSemanticAnalyser("productions.txt");
-	parserAndSemanticAnalyser.outputDFA("DFA.txt");
-	parserAndSemanticAnalyser.analyse(lexicalAnalyser.getResult(), "SLR1_analyse.txt");
+	parserAndSemanticAnalyser.outputDFA("ItemSets.txt");
+	parserAndSemanticAnalyser.analyse(lexicalAnalyser.getResult(), "LR1_analyse.txt");
 	parserAndSemanticAnalyser.outputIntermediateCode();
+	parserAndSemanticAnalyser.outputIntermediateCodeToFile("IntermediateCode.txt");
 
 	IntermediateCode* code = parserAndSemanticAnalyser.getIntermediateCode();
 	code->divideBlocks(parserAndSemanticAnalyser.getFuncEnter());

@@ -224,7 +224,7 @@ public:
 	void outputDFA();
 	void outputDFA(const char* fileName);
 	void outputIntermediateCode();
-	void outputIntermediateCode(const char* fileName);
+	void outputIntermediateCodeToFile(const char* fileName);
 	void analyse(list<Token>& words, const char* fileName);
 	void analyse(list<Token>& words);
 	vector<pair<int, string> > getFuncEnter();

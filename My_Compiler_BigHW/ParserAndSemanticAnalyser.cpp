@@ -402,7 +402,7 @@ void ParserAndSemanticAnalyser::createDFA() {
 			//没有在已有状态中找到该状态
 			if (!searchFlag) {
 				dfa.stas.push_back(newI);
-				dfa.goTo[GOTO(nowI, nextSymbol)] = dfa.stas.size() - 1;
+				dfa.goTo[GOTO(nowI, nextSymbol)] = int(dfa.stas.size() - 1);
 				if (SLR1_Table.count(GOTO(nowI, nextSymbol)) == 1) {
 					outputError("confict");
 				}
@@ -476,7 +476,7 @@ void ParserAndSemanticAnalyser::outputIntermediateCode() {
 	code.output();
 }
 
-void ParserAndSemanticAnalyser::outputIntermediateCode(const char* fileName) {
+void ParserAndSemanticAnalyser::outputIntermediateCodeToFile(const char* fileName) {
 	code.output(fileName);
 }
 
@@ -537,10 +537,11 @@ void ParserAndSemanticAnalyser::analyse(list<Token>& words, ostream& out) {
 		}
 		else if (bh.behavior == reduct) {
 			Production reductPro = productions[bh.nextStat];
-			int popSymNum = reductPro.right.size();
+			int popSymNum = int(reductPro.right.size());
 			switch (bh.nextStat) {
-			case 3://declare ::= int ID M A function_declare
+			case 3:
 			{
+				//declare ::= int ID M A function_declare
 				FunctionDeclare* function_declare = (FunctionDeclare*)popSymbol();
 				Symbol* A = popSymbol();
 				M* m = (M*)popSymbol();
