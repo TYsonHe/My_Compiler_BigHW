@@ -364,3 +364,7 @@ FodyWeavers.xsd
 /My_Compiler_BigHW/program.asm
 /My_Compiler_BigHW/SLR1_analyse.txt
 /My_Compiler_BigHW/DFA.txt
+/My_Compiler_BigHW/LR1_analyse.txt
+/My_Compiler_BigHW/Lexical_analyse.txt
+/My_Compiler_BigHW/IntermediateCode.txt
+/My_Compiler_BigHW/ItemSets.txt
