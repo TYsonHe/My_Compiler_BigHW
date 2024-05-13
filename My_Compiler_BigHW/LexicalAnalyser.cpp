@@ -232,6 +232,18 @@ void LexicalAnalyser::outputToStream(ostream& out) {
 	else {
 		list<Token>::iterator iter;
 		for (iter = result.begin(); iter != result.end(); iter++) {
+			out<<BOLDYELLOW << token_to_string(*iter) << endl<<RESET;
+		}
+	}
+}
+
+void LexicalAnalyser::outputToStreamFile(ostream& out) {
+	if (result.back().first == ERROR) {
+		out << token_to_string(result.back()) << endl;
+	}
+	else {
+		list<Token>::iterator iter;
+		for (iter = result.begin(); iter != result.end(); iter++) {
 			out << token_to_string(*iter) << endl;
 		}
 	}
@@ -248,7 +260,7 @@ void LexicalAnalyser::outputToFile(const char* fileName) {
 		cerr << "file " << fileName << " open error" << endl;
 		return;
 	}
-	outputToStream(fout);
+	outputToStreamFile(fout);
 	fout.close();
 }
 

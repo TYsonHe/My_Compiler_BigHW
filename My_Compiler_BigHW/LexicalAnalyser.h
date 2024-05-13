@@ -10,6 +10,7 @@ private:
 	char getNextChar();
 	Token getNextToken();
 	void outputToStream(ostream& out);
+	void outputToStreamFile(ostream& out);
 public:
 	LexicalAnalyser(const char* path);
 	~LexicalAnalyser();

@@ -16,6 +16,7 @@ private:
 	NewLabeler nl;
 
 	void output(ostream& out);
+	void outputFile(ostream& out);
 	void outputBlocks(ostream& out);
 public:
 	void emit(Quaternary q);

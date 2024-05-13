@@ -49,6 +49,7 @@ private:
 
 	void outputIBlocks(ostream& out);
 	void outputObjectCode(ostream& out);
+	void outputObjectCodeFile(ostream& out);
 	void storeVar(string reg, string var);
 	void storeOutLiveVar(set<string>& outl);
 	void releaseVar(string var);

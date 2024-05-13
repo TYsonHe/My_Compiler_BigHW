@@ -117,7 +117,7 @@ string ObjectCodeGenerator::allocateReg() {
 			if (!inFlag) {//如果变量仅存储在寄存器中，就看未来在何处会引用该变量
 				for (vector<QuaternaryWithInfo>::iterator cIter = nowQuatenary; cIter != nowIBlock->codes.end(); cIter++) {
 					if (*viter == cIter->q.src1 || *viter == cIter->q.src2) {
-						nextpos = cIter - nowQuatenary;
+						nextpos = static_cast<int>(cIter - nowQuatenary);
 					}
 					else if (*viter == cIter->q.des) {
 						break;
@@ -157,7 +157,7 @@ string ObjectCodeGenerator::allocateReg() {
 				}
 			}
 			if (cIter == nowIBlock->codes.end()) {//如果V在本基本块中未被引用，且也没有被赋值
-				int index = nowIBlock - funcIBlocks[nowFunc].begin();
+				int index = static_cast<int>(nowIBlock - funcIBlocks[nowFunc].begin());
 				if (funcOUTL[nowFunc][index].count(*iter) == 1) {//如果此变量是出口之后的活跃变量
 					storeFlag = true;
 				}
@@ -354,7 +354,7 @@ void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) 
 		blockIndex = 0;
 		//计算每个四元式的待用信息和活跃信息
 		for (vector<IBlock>::iterator ibiter = iBlocks.begin(); ibiter != iBlocks.end(); ibiter++, blockIndex++) {//遍历每一个基本块
-			int codeIndex = ibiter->codes.size() - 1;
+			int codeIndex = static_cast<int>(ibiter->codes.size() - 1);
 			for (vector<QuaternaryWithInfo>::reverse_iterator citer = ibiter->codes.rbegin(); citer != ibiter->codes.rend(); citer++, codeIndex--) {//逆序遍历基本块中的代码
 				if (citer->q.op == "j" || citer->q.op == "call") {
 					//pass
@@ -425,6 +425,12 @@ void ObjectCodeGenerator::outputIBlocks(const char* fileName) {
 
 void ObjectCodeGenerator::outputObjectCode(ostream& out) {
 	for (vector<string>::iterator iter = objectCodes.begin(); iter != objectCodes.end(); iter++) {
+		out<< BOLDMAGENTA << *iter << endl<<RESET;
+	}
+}
+
+void ObjectCodeGenerator::outputObjectCodeFile(ostream& out) {
+	for (vector<string>::iterator iter = objectCodes.begin(); iter != objectCodes.end(); iter++) {
 		out << *iter << endl;
 	}
 }
@@ -440,7 +446,7 @@ void ObjectCodeGenerator::outputObjectCode(const char* fileName) {
 		cerr << "file " << fileName << " open error" << endl;
 		return;
 	}
-	outputObjectCode(fout);
+	outputObjectCodeFile(fout);
 
 	fout.close();
 }
@@ -651,7 +657,7 @@ void ObjectCodeGenerator::generateCodeForFuncBlocks(map<string, vector<IBlock> >
 	vector<IBlock>& iBlocks = fiter->second;
 	for (vector<IBlock>::iterator iter = iBlocks.begin(); iter != iBlocks.end(); iter++) {//对每一个基本块
 		nowIBlock = iter;
-		generateCodeForBaseBlocks(nowIBlock - iBlocks.begin());
+		generateCodeForBaseBlocks(static_cast<int>(nowIBlock - iBlocks.begin()));
 	}
 }
 

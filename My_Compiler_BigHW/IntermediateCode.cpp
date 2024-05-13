@@ -14,7 +14,7 @@ void IntermediateCode::divideBlocks(vector<pair<int, string> > funcEnter) {
 		priority_queue<int, vector<int>, greater<int> >block_enter;//记录所有基本块的入口点
 		block_enter.push(iter->first);
 
-		int endIndex = iter + 1 == funcEnter.end() ? code.size() : (iter + 1)->first;
+		int endIndex = static_cast<int>(iter + 1 == funcEnter.end() ? code.size() : (iter + 1)->first);
 		for (int i = iter->first; i != endIndex; i++) {
 			if (code[i].op[0] == 'j') {
 				if (code[i].op == "j") {//若操作符是j
@@ -63,7 +63,7 @@ void IntermediateCode::divideBlocks(vector<pair<int, string> > funcEnter) {
 				block.name = iter->second;
 				firstFlag = false;
 			}
-			enter_block[lastEnter] = blocks.size();
+			enter_block[lastEnter] = static_cast<int>(blocks.size());
 			blocks.push_back(block);
 			lastEnter = enter;
 			block.codes.clear();
@@ -86,7 +86,7 @@ void IntermediateCode::divideBlocks(vector<pair<int, string> > funcEnter) {
 				block.codes.push_back(code[i]);
 			}
 		}
-		enter_block[lastEnter] = blocks.size();
+		enter_block[lastEnter] = static_cast<int>(blocks.size());
 		blocks.push_back(block);
 
 		int blockIndex = 0;
@@ -120,6 +120,20 @@ void IntermediateCode::divideBlocks(vector<pair<int, string> > funcEnter) {
 }
 
 void IntermediateCode::output(ostream& out) {
+	int i = 0;
+	for (vector<Quaternary>::iterator iter = code.begin(); iter != code.end(); iter++, i++) {
+		out << CYAN;
+		out << setw(4) << i;
+		out << "( " << iter->op << " , ";
+		out << iter->src1 << " , ";
+		out << iter->src2 << " , ";
+		out << iter->des << " )";
+		out << endl;
+		out << RESET;
+	}
+}
+
+void IntermediateCode::outputFile(ostream& out) {
 	int i = 0;
 	for (vector<Quaternary>::iterator iter = code.begin(); iter != code.end(); iter++, i++) {
 		out << setw(4) << i;
@@ -171,7 +185,7 @@ void IntermediateCode::output(const char* fileName) {
 		cerr << "file " << fileName << " open error" << endl;
 		return;
 	}
-	output(fout);
+	outputFile(fout);
 
 	fout.close();
 }
@@ -193,7 +207,8 @@ void IntermediateCode::outputBlocks(const char* fileName) {
 }
 
 int IntermediateCode::nextQuad() {
-	return code.size();
+
+	return static_cast<int>(code.size());
 }
 
 map<string, vector<Block> >* IntermediateCode::getFuncBlock() {
