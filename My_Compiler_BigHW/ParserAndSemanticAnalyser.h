@@ -212,11 +212,17 @@ class ParserAndSemanticAnalyser {
 private:
 	int lineCount;
 	int nowLevel; // 当前分析行所在的语句块级次
+
+	// 构造DFA前置
 	vector<Production>productions; // 产生式集合
-	DFA dfa;  // 生成的DFA
-	map<GOTO, Behavior> LR1_Table; // 由产生式表构造出的LR1表
 	map<Symbol, set<Symbol> >first; // 由产生式表构造出的first集
 	map<Symbol, set<Symbol> >follow; // 由产生式表构造出的follow集
+	
+	// 构造LR分析表
+	DFA dfa;  // 生成的DFA
+	map<GOTO, Behavior> LR1_Table; // 由产生式表构造出的LR1表
+	
+	// 构造LR分析过程
 	stack<Symbol*> symStack; // 符号栈
 	stack<int> staStack; // 状态栈
 	vector<Var> varTable; // 变量表

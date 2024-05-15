@@ -30,7 +30,7 @@ VarInfomation::VarInfomation(const VarInfomation& other) {
 }
 
 VarInfomation::VarInfomation() {
-
+	// 暂无内容
 }
 
 void VarInfomation::output(ostream& out) {
@@ -63,7 +63,7 @@ void QuaternaryWithInfo::output(ostream& out) {
 }
 
 ObjectCodeGenerator::ObjectCodeGenerator() {
-
+	// 暂无内容
 }
 
 void ObjectCodeGenerator::storeVar(string reg, string var) {
@@ -90,9 +90,9 @@ void ObjectCodeGenerator::releaseVar(string var) {
 	Avalue[var].clear();
 }
 
-//为引用变量分配寄存器
+// 为引用变量分配寄存器（内层）
 string ObjectCodeGenerator::allocateReg() {
-	//如果有尚未分配的寄存器，则从中选取一个Ri为所需要的寄存器R
+	// 如果有尚未分配的寄存器，则从中选取一个Ri为所需要的寄存器R
 	string ret;
 	if (freeReg.size()) {
 		ret = freeReg.back();
@@ -100,25 +100,31 @@ string ObjectCodeGenerator::allocateReg() {
 		return ret;
 	}
 
-	/*
-	从已分配的寄存器中选取一个Ri为所需要的寄存器R。最好使得Ri满足以下条件：
-	占用Ri的变量的值也同时存放在该变量的贮存单元中
-	或者在基本块中要在最远的将来才会引用到或不会引用到。
-	*/
+	/***********************************************************************
+	* 按照课本分析
+	* 从已分配的寄存器中选取一个Ri为所需要的寄存器R。最好使得Ri满足以下条件：
+	* 1.占用Ri的变量的值也同时存放在该变量的贮存单元中
+	* 2.或者在基本块中要在最远的将来才会引用到或不会引用到。
+	***********************************************************************/
 
 	const int inf = 1000000;
 	int maxNextPos = 0;
-	for (map<string, set<string> >::iterator iter = Rvalue.begin(); iter != Rvalue.end(); iter++) {//遍历所有的寄存器
+	for (map<string, set<string> >::iterator iter = Rvalue.begin(); iter != Rvalue.end(); iter++) {
+		// 遍历所有的寄存器
 		int nextpos = inf;
-		for (set<string>::iterator viter = iter->second.begin(); viter != iter->second.end(); viter++) {//遍历寄存器中储存的变量
-			bool inFlag = false;//变量已在其他地方存储的标志
-			for (set<string>::iterator aiter = Avalue[*viter].begin(); aiter != Avalue[*viter].end(); aiter++) {//遍历变量的存储位置
-				if (*aiter != iter->first) {//如果变量存储在其他地方
+		for (set<string>::iterator viter = iter->second.begin(); viter != iter->second.end(); viter++) {
+			// 遍历寄存器中储存的变量
+			bool inFlag = false; // 变量已在其他地方存储的标志
+			for (set<string>::iterator aiter = Avalue[*viter].begin(); aiter != Avalue[*viter].end(); aiter++) {
+				// 遍历变量的存储位置
+				if (*aiter != iter->first) {
+					// 如果变量存储在其他地方
 					inFlag = true;
 					break;
 				}
 			}
-			if (!inFlag) {//如果变量仅存储在寄存器中，就看未来在何处会引用该变量
+			if (!inFlag) {
+				// 如果变量仅存储在寄存器中，就看未来在何处会引用该变量
 				for (vector<QuaternaryWithInfo>::iterator cIter = nowQuatenary; cIter != nowIBlock->codes.end(); cIter++) {
 					if (*viter == cIter->q.src1 || *viter == cIter->q.src2) {
 						nextpos = static_cast<int>(cIter - nowQuatenary);
@@ -140,60 +146,72 @@ string ObjectCodeGenerator::allocateReg() {
 	}
 
 	for (set<string>::iterator iter = Rvalue[ret].begin(); iter != Rvalue[ret].end(); iter++) {
-		//对ret的寄存器中保存的变量*iter，他们都将不再存储在ret中
+		// 对ret的寄存器中保存的变量*iter，他们都将不再存储在ret中
 		Avalue[*iter].erase(ret);
-		//如果V的地址描述数组AVALUE[V]说V还保存在R之外的其他地方，则不需要生成存数指令
+		// 如果V的地址描述数组AVALUE[V]说V还保存在R之外的其他地方，则不需要生成存数指令
 		if (Avalue[*iter].size() > 0) {
-			//pass
+			// 不需要执行任何操作
+			;
 		}
-		//如果V不会在此之后被使用，则不需要生成存数指令
+		// 如果V不会在此之后被使用，则不需要生成存数指令
 		else {
 			bool storeFlag = true;
 			vector<QuaternaryWithInfo>::iterator cIter;
 			for (cIter = nowQuatenary; cIter != nowIBlock->codes.end(); cIter++) {
-				if (cIter->q.src1 == *iter || cIter->q.src2 == *iter) {//如果V在本基本块中被引用
+				if (cIter->q.src1 == *iter || cIter->q.src2 == *iter) {
+					// 如果V在本基本块中被引用
 					storeFlag = true;
 					break;
 				}
-				if (cIter->q.des == *iter) {//如果V在本基本块中被赋值
+				if (cIter->q.des == *iter) {
+					// 如果V在本基本块中被赋值
 					storeFlag = false;
 					break;
 				}
 			}
-			if (cIter == nowIBlock->codes.end()) {//如果V在本基本块中未被引用，且也没有被赋值
+			if (cIter == nowIBlock->codes.end()) {
+				// 如果V在本基本块中未被引用，且也没有被赋值
 				int index = static_cast<int>(nowIBlock - funcIBlocks[nowFunc].begin());
-				if (funcOUTL[nowFunc][index].count(*iter) == 1) {//如果此变量是出口之后的活跃变量
+				if (funcOUTL[nowFunc][index].count(*iter) == 1) {
+					// 如果此变量是出口之后的活跃变量
 					storeFlag = true;
 				}
 				else {
 					storeFlag = false;
 				}
 			}
-			if (storeFlag) {//生成存数指令
+			if (storeFlag) {
+				// 生成存数指令
 				storeVar(ret, *iter);
 			}
 		}
 	}
-	Rvalue[ret].clear();//清空ret寄存器中保存的变量
+
+	Rvalue[ret].clear(); // 清空ret寄存器中保存的变量
 
 	return ret;
 }
 
-//为引用变量分配寄存器
+// 为引用变量分配寄存器（外层）
 string ObjectCodeGenerator::allocateReg(string var) {
+
 	if (isNum(var)) {
+		// 如果是数字
 		string ret = allocateReg();
 		objectCodes.push_back(string("addi ") + ret + " $zero " + var);
 		return ret;
 	}
 
 	for (set<string>::iterator iter = Avalue[var].begin(); iter != Avalue[var].end(); iter++) {
-		if ((*iter)[0] == '$') {//如果变量已经保存在某个寄存器中
-			return *iter;//直接返回该寄存器
+		// 搜索Avlue
+		if ((*iter)[0] == '$') {
+			// 如果变量已经保存在某个寄存器中
+			return *iter; // 直接返回该寄存器
 		}
 	}
 
-	//如果该变量没有在某个寄存器中
+	// 如果该变量没有在某个寄存器中
+	// 重新分配
 	string ret = allocateReg();
 	objectCodes.push_back(string("lw ") + ret + " " + to_string(varOffset[var]) + "($sp)");
 	Avalue[var].insert(ret);
@@ -201,21 +219,27 @@ string ObjectCodeGenerator::allocateReg(string var) {
 	return ret;
 }
 
-//为目标变量分配寄存器
+// 为目标变量分配寄存器
 string ObjectCodeGenerator::getReg() {
-	//i: A:=B op C
-	//如果B的现行值在某个寄存器Ri中，RVALUE[Ri]中只包含B
-	//此外，或者B与A是同一个标识符或者B的现行值在执行四元式A:=B op C之后不会再引用
-	//则选取Ri为所需要的寄存器R
 
-	//如果src1不是数字
+	/******************************************************************************
+	*  按照课本知识
+	*  i: A:=B op C
+	*  如果B的现行值在某个寄存器Ri中，RVALUE[Ri]中只包含B
+	*  此外，或者B与A是同一个标识符或者B的现行值在执行四元式A:=B op C之后不会再引用
+	*  则选取Ri为所需要的寄存器R
+	*******************************************************************************/
+
+	// 如果src1不是数字
 	if (!isNum(nowQuatenary->q.src1)) {
-		//遍历src1所在的寄存器
+		// 遍历src1所在的寄存器
 		set<string>& src1pos = Avalue[nowQuatenary->q.src1];
 		for (set<string>::iterator iter = src1pos.begin(); iter != src1pos.end(); iter++) {
 			if ((*iter)[0] == '$') {
-				if (Rvalue[*iter].size() == 1) {//如果该寄存器中值仅仅存有src1
-					if (nowQuatenary->q.des == nowQuatenary->q.src1 || !nowQuatenary->info1.active) {//如果A,B是同一标识符或B以后不活跃
+				if (Rvalue[*iter].size() == 1) {
+					// 如果该寄存器中值仅仅存有src1
+					if (nowQuatenary->q.des == nowQuatenary->q.src1 || !nowQuatenary->info1.active) {
+						// 如果A,B是同一标识符或B以后不活跃
 						Avalue[nowQuatenary->q.des].insert(*iter);
 						Rvalue[*iter].insert(nowQuatenary->q.des);
 						return *iter;
@@ -225,8 +249,6 @@ string ObjectCodeGenerator::getReg() {
 		}
 	}
 
-	//为目标变量分配可能不正确
-	//return allocateReg(nowQuatenary->q.des);
 	string ret = allocateReg();
 	Avalue[nowQuatenary->q.des].insert(ret);
 	Rvalue[ret].insert(nowQuatenary->q.des);
@@ -234,35 +256,44 @@ string ObjectCodeGenerator::getReg() {
 }
 
 void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) {
+
 	for (map<string, vector<Block> >::iterator fbiter = funcBlocks->begin(); fbiter != funcBlocks->end(); fbiter++) {
+		// 遍历全部的函数块
 		vector<IBlock> iBlocks;
 		vector<Block>& blocks = fbiter->second;
 		vector<set<string> >INL, OUTL, DEF, USE;
 
-		//活跃变量的数据流方程
-		//确定DEF，USE
+		// 活跃变量的数据流方程
+		// 确定DEF，USE
 		for (vector<Block>::iterator biter = blocks.begin(); biter != blocks.end(); biter++) {
 			set<string>def, use;
 			for (vector<Quaternary>::iterator citer = biter->codes.begin(); citer != biter->codes.end(); citer++) {
 				if (citer->op == "j" || citer->op == "call") {
-					//pass
+					// 不需要执行操作
+					;
 				}
-				else if (citer->op[0] == 'j') {//j>= j<=,j==,j!=,j>,j<
-					if (isVar(citer->src1) && def.count(citer->src1) == 0) {//如果源操作数1还没有被定值
+				else if (citer->op[0] == 'j') {
+					// j>= j<=,j==,j!=,j>,j<
+					if (isVar(citer->src1) && def.count(citer->src1) == 0) {
+						// 如果源操作数1还没有被定值
 						use.insert(citer->src1);
 					}
-					if (isVar(citer->src2) && def.count(citer->src2) == 0) {//如果源操作数2还没有被定值
+					if (isVar(citer->src2) && def.count(citer->src2) == 0) {
+						// 如果源操作数2还没有被定值
 						use.insert(citer->src2);
 					}
 				}
 				else {
-					if (isVar(citer->src1) && def.count(citer->src1) == 0) {//如果源操作数1还没有被定值
+					if (isVar(citer->src1) && def.count(citer->src1) == 0) {
+						// 如果源操作数1还没有被定值
 						use.insert(citer->src1);
 					}
-					if (isVar(citer->src2) && def.count(citer->src2) == 0) {//如果源操作数2还没有被定值
+					if (isVar(citer->src2) && def.count(citer->src2) == 0) {
+						// 如果源操作数2还没有被定值
 						use.insert(citer->src2);
 					}
-					if (isVar(citer->des) && use.count(citer->des) == 0) {//如果目的操作数还没有被引用
+					if (isVar(citer->des) && use.count(citer->des) == 0) {
+						// 如果目的操作数还没有被引用
 						def.insert(citer->des);
 					}
 				}
@@ -273,7 +304,7 @@ void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) 
 			OUTL.push_back(set<string>());
 		}
 
-		//确定INL，OUTL
+		// 确定INL，OUTL
 		bool change = true;
 		while (change) {
 			change = false;
@@ -317,15 +348,19 @@ void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) 
 			iBlocks.push_back(iBlock);
 		}
 
-		vector<map<string, VarInfomation> > symTables;//每个基本块对应一张符号表
-		//初始化符号表
-		for (vector<Block>::iterator biter = blocks.begin(); biter != blocks.end(); biter++) {//遍历每一个基本块
+		vector<map<string, VarInfomation> > symTables; // 每个基本块对应一张符号表
+		// 初始化符号表
+		for (vector<Block>::iterator biter = blocks.begin(); biter != blocks.end(); biter++) {
+			// 遍历每一个基本块
 			map<string, VarInfomation>symTable;
-			for (vector<Quaternary>::iterator citer = biter->codes.begin(); citer != biter->codes.end(); citer++) {//遍历基本块中的每个四元式
+			for (vector<Quaternary>::iterator citer = biter->codes.begin(); citer != biter->codes.end(); citer++) {
+				// 遍历基本块中的每个四元式
 				if (citer->op == "j" || citer->op == "call") {
-					//pass
+					//不需要执行任何操作
+					;
 				}
-				else if (citer->op[0] == 'j') {//j>= j<=,j==,j!=,j>,j<
+				else if (citer->op[0] == 'j') {
+					// j>= j<=,j==,j!=,j>,j<
 					if (isVar(citer->src1)) {
 						symTable[citer->src1] = VarInfomation{ -1,false };
 					}
@@ -348,22 +383,27 @@ void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) 
 			symTables.push_back(symTable);
 		}
 		int blockIndex = 0;
-		for (vector<set<string> >::iterator iter = OUTL.begin(); iter != OUTL.end(); iter++, blockIndex++) {//遍历每个基本块的活跃变量表
-			for (set<string>::iterator viter = iter->begin(); viter != iter->end(); viter++) {//遍历活跃变量表中的变量
+		for (vector<set<string> >::iterator iter = OUTL.begin(); iter != OUTL.end(); iter++, blockIndex++) {
+			// 遍历每个基本块的活跃变量表
+			for (set<string>::iterator viter = iter->begin(); viter != iter->end(); viter++) {
+				// 遍历活跃变量表中的变量
 				symTables[blockIndex][*viter] = VarInfomation{ -1,true };
 			}
 
 		}
 
 		blockIndex = 0;
-		//计算每个四元式的待用信息和活跃信息
-		for (vector<IBlock>::iterator ibiter = iBlocks.begin(); ibiter != iBlocks.end(); ibiter++, blockIndex++) {//遍历每一个基本块
+		// 计算每个四元式的待用信息和活跃信息
+		for (vector<IBlock>::iterator ibiter = iBlocks.begin(); ibiter != iBlocks.end(); ibiter++, blockIndex++) {
+			// 遍历每一个基本块
 			int codeIndex = static_cast<int>(ibiter->codes.size() - 1);
 			for (vector<QuaternaryWithInfo>::reverse_iterator citer = ibiter->codes.rbegin(); citer != ibiter->codes.rend(); citer++, codeIndex--) {//逆序遍历基本块中的代码
 				if (citer->q.op == "j" || citer->q.op == "call") {
-					//pass
+					// 不需要执行任何操作
+					;
 				}
-				else if (citer->q.op[0] == 'j') {//j>= j<=,j==,j!=,j>,j<
+				else if (citer->q.op[0] == 'j') {
+					// j>= j<=,j==,j!=,j>,j<
 					if (isVar(citer->q.src1)) {
 						citer->info1 = symTables[blockIndex][citer->q.src1];
 						symTables[blockIndex][citer->q.src1] = VarInfomation{ codeIndex,true };
@@ -455,13 +495,14 @@ void ObjectCodeGenerator::outputObjectCode(const char* fileName) {
 	fout.close();
 }
 
-//基本块出口，将出口活跃变量保存在内存
+// 基本块出口，将出口活跃变量保存在内存
 void ObjectCodeGenerator::storeOutLiveVar(set<string>& outl) {
 	for (set<string>::iterator oiter = outl.begin(); oiter != outl.end(); oiter++) {
-		string reg;//活跃变量所在的寄存器名称
-		bool inFlag = false;//活跃变量在内存中的标志
+		string reg; // 活跃变量所在的寄存器名称
+		bool inFlag = false; // 活跃变量在内存中的标志
 		for (set<string>::iterator aiter = Avalue[*oiter].begin(); aiter != Avalue[*oiter].end(); aiter++) {
-			if ((*aiter)[0] != '$') {//该活跃变量已经存储在内存中
+			if ((*aiter)[0] != '$') {
+				// 该活跃变量已经存储在内存中
 				inFlag = true;
 				break;
 			}
@@ -469,13 +510,15 @@ void ObjectCodeGenerator::storeOutLiveVar(set<string>& outl) {
 				reg = *aiter;
 			}
 		}
-		if (!inFlag) {//如果该活跃变量不在内存中，则将reg中的var变量存入内存
+		if (!inFlag) {
+			// 如果该活跃变量不在内存中，则将reg中的var变量存入内存
 			storeVar(reg, *oiter);
 		}
 	}
 }
 
-void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& arg_num, int& par_num, list<pair<string, bool> >& par_list) {
+void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& arg_num, int& par_num, list<pair<string, bool> >& par_list) 
+{
 	if (nowQuatenary->q.op[0] != 'j' && nowQuatenary->q.op != "call") {
 		if (isVar(nowQuatenary->q.src1) && Avalue[nowQuatenary->q.src1].empty()) {
 			outputError(string("变量") + nowQuatenary->q.src1 + "在引用前未赋值");
@@ -489,7 +532,8 @@ void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& a
 	if (nowQuatenary->q.op == "j") {
 		objectCodes.push_back(nowQuatenary->q.op + " " + nowQuatenary->q.des);
 	}
-	else if (nowQuatenary->q.op[0] == 'j') {//j>= j<=,j==,j!=,j>,j<
+	else if (nowQuatenary->q.op[0] == 'j') {
+		// j>= j<=,j==,j!=,j>,j<
 		string op;
 		if (nowQuatenary->q.op == "j>=")
 			op = "bge";
@@ -514,10 +558,11 @@ void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& a
 		}
 	}
 	else if (nowQuatenary->q.op == "par") {
+		// 函数参数传递
 		par_list.push_back(pair<string, bool>(nowQuatenary->q.src1, nowQuatenary->info1.active));
 	}
 	else if (nowQuatenary->q.op == "call") {
-		/*将参数压栈*/
+		// 将参数压栈
 		for (list<pair<string, bool> >::iterator aiter = par_list.begin(); aiter != par_list.end(); aiter++) {
 			string pos = allocateReg(aiter->first);
 			objectCodes.push_back(string("sw ") + pos + " " + to_string(top + 4 * (++arg_num + 1)) + "($sp)");
@@ -525,21 +570,23 @@ void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& a
 				releaseVar(aiter->first);
 			}
 		}
-		/*更新$sp*/
+		// 更新$sp
 		objectCodes.push_back(string("sw $sp ") + to_string(top) + "($sp)");
 		objectCodes.push_back(string("addi $sp $sp ") + to_string(top));
 
-		/*跳转到对应函数*/
+		// 跳转到对应函数
 		objectCodes.push_back(string("jal ") + nowQuatenary->q.src1);
 
-		/*恢复现场*/
+		// 恢复现场
 		objectCodes.push_back(string("lw $sp 0($sp)"));
 	}
 	else if (nowQuatenary->q.op == "return") {
-		if (isNum(nowQuatenary->q.src1)) {//返回值为数字
+		if (isNum(nowQuatenary->q.src1)) {
+			// 若返回值为数字
 			objectCodes.push_back("addi $v0 $zero " + nowQuatenary->q.src1);
 		}
-		else if (isVar(nowQuatenary->q.src1)) {//返回值为变量
+		else if (isVar(nowQuatenary->q.src1)) {
+			// 若返回值为变量
 			set<string>::iterator piter = Avalue[nowQuatenary->q.src1].begin();
 			if ((*piter)[0] == '$') {
 				objectCodes.push_back(string("add $v0 $zero ") + *piter);
@@ -557,13 +604,11 @@ void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& a
 		}
 	}
 	else if (nowQuatenary->q.op == "get") {
-		//varOffset[nowQuatenary->q.src1] = 4 * (par_num++ + 2);
 		varOffset[nowQuatenary->q.des] = top;
 		top += 4;
 		Avalue[nowQuatenary->q.des].insert(nowQuatenary->q.des);
 	}
 	else if (nowQuatenary->q.op == "=") {
-		//Avalue[nowQuatenary->q.des] = set<string>();
 		string src1Pos;
 		if (nowQuatenary->q.src1 == "@RETURN_PLACE") {
 			src1Pos = "$v0";
@@ -574,7 +619,8 @@ void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& a
 		Rvalue[src1Pos].insert(nowQuatenary->q.des);
 		Avalue[nowQuatenary->q.des].insert(src1Pos);
 	}
-	else {// + - * /
+	else {
+		// + - * / 四则运算符
 		string src1Pos = allocateReg(nowQuatenary->q.src1);
 		string src2Pos = allocateReg(nowQuatenary->q.src2);
 		string desPos = getReg();
@@ -659,7 +705,8 @@ void ObjectCodeGenerator::generateCodeForFuncBlocks(map<string, vector<IBlock> >
 	varOffset.clear();
 	nowFunc = fiter->first;
 	vector<IBlock>& iBlocks = fiter->second;
-	for (vector<IBlock>::iterator iter = iBlocks.begin(); iter != iBlocks.end(); iter++) {//对每一个基本块
+	for (vector<IBlock>::iterator iter = iBlocks.begin(); iter != iBlocks.end(); iter++) {
+		// 对每一个基本块
 		nowIBlock = iter;
 		generateCodeForBaseBlocks(static_cast<int>(nowIBlock - iBlocks.begin()));
 	}
@@ -668,7 +715,8 @@ void ObjectCodeGenerator::generateCodeForFuncBlocks(map<string, vector<IBlock> >
 void ObjectCodeGenerator::generateCode() {
 	objectCodes.push_back("lui $sp,0x1001");
 	objectCodes.push_back("j main");
-	for (map<string, vector<IBlock> >::iterator fiter = funcIBlocks.begin(); fiter != funcIBlocks.end(); fiter++) {//对每一个函数块
+	for (map<string, vector<IBlock> >::iterator fiter = funcIBlocks.begin(); fiter != funcIBlocks.end(); fiter++) {
+		// 对每一个函数块
 		generateCodeForFuncBlocks(fiter);
 	}
 	objectCodes.push_back("end:");
