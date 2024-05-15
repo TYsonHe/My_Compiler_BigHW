@@ -34,14 +34,15 @@ void LexicalAnalyser::openFile(const char* path) {
 	}
 }
 
-//获取下一个字符，忽略空白符
+
 char LexicalAnalyser::getNextChar() {
-	char c;
-	while (src >> c) {
-		if (c == ' ' || c == '\t') {
+	//获取下一个字符，忽略空白符号
+	char ch;
+	while (src >> ch) {
+		if (ch == ' ' || ch == '\t') {
 			continue;
 		}
-		else if (c == '\n') {
+		else if (ch == '\n') {
 			lineCount++;
 			return '\n';
 		}
@@ -50,7 +51,7 @@ char LexicalAnalyser::getNextChar() {
 	if (src.eof())
 		return 0;
 	else
-		return c;
+		return ch;
 }
 
 Token LexicalAnalyser::getNextToken() {
@@ -125,14 +126,16 @@ Token LexicalAnalyser::getNextToken() {
 		}
 		break;
 	case '/':
-		//行注释
+		// 这里有可能3种情况
+		// //,/*,除号
 		if (src.peek() == '/') {
-			char buf[1024];
+			// 行注释
+			char buf[1024]; // 最大允许1024
 			src.getline(buf, 1024);
 			return Token(LCOMMENT, string("/") + buf);
 		}
-		//段注释
 		else if (src.peek() == '*') {
+			// 段注释
 			src.get();
 			string buf = "/*";
 			while (src >> c) {
@@ -146,12 +149,12 @@ Token LexicalAnalyser::getNextToken() {
 					}
 				}
 			}
-			//读到最后都没找到*/，因不满足while循环条件退出
+			// 读到最后都没找到*/，因不满足while循环条件退出
 			if (src.eof()) {
 				return Token(ERROR, string("词法分析第") + to_string(lineCount) + string("行：段注释没有匹配的*/"));
 			}
 		}
-		//除法
+		// 除号
 		else {
 			return Token(DIV, "/");
 		}

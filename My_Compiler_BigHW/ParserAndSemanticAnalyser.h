@@ -3,11 +3,11 @@
 #include "IntermediateCode.h"
 #ifndef PARSER_H
 #define PARSER_H
-//符号
+// 符号
 class Symbol {
 public:
-	bool isVt;//是否为终结符
-	string content;//内容
+	bool isVt; // 是否为终结符
+	string content; // 内容
 	friend bool operator ==(const Symbol& one, const Symbol& other);
 	friend bool operator < (const Symbol& one, const Symbol& other);
 	Symbol(const Symbol& sym);
@@ -15,15 +15,19 @@ public:
 	Symbol();
 };
 
-//声明类型（变量声明/函数声明）
+// 声明类型
 enum DecType {
-	DEC_VAR, DEC_FUN
+	DEC_VAR, // 变量声明
+	DEC_FUN  // 函数声明
 };
 
-//数据类型（int/void）
-enum DType { D_VOID, D_INT };
+// 数据类型
+enum DType { 
+	D_VOID, // void 声明
+	D_INT   // int 声明
+};
 
-
+/*********************下面是有关语法规则的定义*********************/
 struct Var {
 	string name;
 	DType type;
@@ -141,41 +145,56 @@ public:
 };
 
 const Symbol symbol[] = {
+	// 保留字
 	{true,"int"},{true,"void"},{true,"if"},{true,"else"},{true,"while"},{true,"return"},
+	// 运算符号
 	{true,"+"},{true,"-"},{true,"*"},{true,"/"},{true,"="},
 	{true,"=="},{true,">"},{true,"<"},{true,"!="},{true,">="},{true,"<="},
-	{true,";"},{true,","},{true,"("},{true,")"},{true,"{"},{true,"}"},{true,"ID"},
-	{false,"ID"}
+	// 界符
+	{true,";"},{true,","},{true,"("},{true,")"},{true,"{"},{true,"}"},
+	// ID
+	{true,"ID"},
+	{false,"ID"}// 非终结符的ID
 };
 
-//产生式
+// 产生式
 struct Production {
-	int id;//产生式的标识id，方便比较
+	int id; // 产生式的标识id，方便比较
 	Symbol left;
 	vector<Symbol>right;
 };
 
-//项目
+// 项目
 struct Item {
-	int pro;//产生式id
-	int pointPos;//.的位置
+	int pro; // 产生式id
+	int pointPos; // 项目中.的位置
 	friend bool operator ==(const Item& one, const Item& other);
 	friend bool operator <(const Item& one, const Item& other);
 };
 
-//DFA状态
+// DFA项目集
 struct I {
 	set<Item> items;
 };
 
+// 定义GOTO表
 typedef pair<int, Symbol> GOTO;
 
+// 定义DFA，用于构建LR分析表
 struct DFA {
 	list<I> stas;
 	map<GOTO, int> goTo;
 };
 
-enum Behave { reduct, shift, accept, error };
+// 定义LR分析表的行为
+enum Behave { 
+	reduct, // 规约
+	shift,  // 移进
+	accept, // 接受
+	error   // 出错
+};
+
+// 定义行为和下一状态
 struct Behavior {
 	Behave behavior;
 	int nextStat;
@@ -192,23 +211,24 @@ public:
 class ParserAndSemanticAnalyser {
 private:
 	int lineCount;
-	int nowLevel;//当前分析行所在的语句块级次
-	vector<Production>productions;
-	DFA dfa;
-	map<GOTO, Behavior> SLR1_Table;//由product.txt构造出的SLR1表
-	map<Symbol, set<Symbol> >first;//由product.txt构造出的first集
-	map<Symbol, set<Symbol> >follow;//由product.txt构造出的follow集
-	stack<Symbol*> symStack;//符号栈
-	stack<int> staStack;//状态栈
-	vector<Var> varTable;//变量表
-	vector<Func> funcTable;//函数表
-	IntermediateCode code;//生成的四元式
-	NewTemper nt;
+	int nowLevel; // 当前分析行所在的语句块级次
+	vector<Production>productions; // 产生式集合
+	DFA dfa;  // 生成的DFA
+	map<GOTO, Behavior> LR1_Table; // 由产生式表构造出的LR1表
+	map<Symbol, set<Symbol> >first; // 由产生式表构造出的first集
+	map<Symbol, set<Symbol> >follow; // 由产生式表构造出的follow集
+	stack<Symbol*> symStack; // 符号栈
+	stack<int> staStack; // 状态栈
+	vector<Var> varTable; // 变量表
+	vector<Func> funcTable; // 函数表
+	IntermediateCode code; // 生成的四元式中间代码
+	NewTemper nt; // 中间变量
 
 	void readProductions(const char* fileName);
 	I derive(Item item);
 	void createDFA();
 	void outputDFA(ostream& out);
+	void printLRTable(ostream& out);
 	void analyse(list<Token>& words, ostream& out);
 	void outputSymbolStack(ostream& out);
 	void outputStateStack(ostream& out);
@@ -216,13 +236,14 @@ private:
 	void getFollow();
 	Func* lookUpFunc(string ID);
 	Var* lookUpVar(string ID);
-	bool march(list<string>& argument_list, list<DType>& parameter_list);
+	bool match(list<string>& argument_list, list<DType>& parameter_list);
 	Symbol* popSymbol();
 	void pushSymbol(Symbol* sym);
 public:
 	ParserAndSemanticAnalyser(const char* fileName);
 	void outputDFA();
 	void outputDFA(const char* fileName);
+	void printLRTable(const char* fileName);
 	void outputIntermediateCode();
 	void outputIntermediateCodeToFile(const char* fileName);
 	void analyse(list<Token>& words, const char* fileName);

@@ -1,6 +1,7 @@
 #pragma once
 #include "Common.h"
 
+// 用于生成新的标签名称
 class NewLabeler {
 private:
 	int index;
@@ -9,6 +10,7 @@ public:
 	string newLabel();
 };
 
+// 管理中间代码的生成和输出
 class IntermediateCode {
 private:
 	vector<Quaternary> code;

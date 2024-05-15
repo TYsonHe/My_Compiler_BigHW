@@ -1,5 +1,9 @@
 #include "ObjectCodeGenerator.h"
 
+// 备注
+// 保存临时常数 t0 t1寄存器
+// 保存函数的返回值 v0寄存器
+
 bool isVar(string name) {
 	return isalpha(name[0]);
 }
