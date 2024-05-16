@@ -50,6 +50,11 @@ Num::Num(const Symbol& sym, const string& number) : Symbol(sym) {
 	this->number = number;
 }
 
+/*
+* 以下是语义翻译过程中用到的变量的构造函数
+* 均为空内容
+*/
+
 FunctionDeclare::FunctionDeclare(const Symbol& sym) : Symbol(sym) {}
 
 Parameter::Parameter(const Symbol& sym) : Symbol(sym) {}
@@ -80,6 +85,7 @@ Factor::Factor(const Symbol& sym) : Symbol(sym) {}
 
 ArgumentList::ArgumentList(const Symbol& sym) : Symbol(sym) {}
 
+// 判断是否是终结符
 bool isVT(string s) {
 	if (s == "int" || s == "void" || s == "if" || s == "while" || s == "else" || s == "return") {
 		return true;
@@ -93,6 +99,7 @@ bool isVT(string s) {
 	return false;
 }
 
+// 整个语法分析的过程
 ParserAndSemanticAnalyser::ParserAndSemanticAnalyser(const char* fileName) {
 	readProductions(fileName);
 	getFirst();

@@ -647,9 +647,9 @@ void ObjectCodeGenerator::generateCodeForQuatenary(int nowBaseBlockIndex, int& a
 }
 
 void ObjectCodeGenerator::generateCodeForBaseBlocks(int nowBaseBlockIndex) {
-	int arg_num = 0;//par的实参个数
-	int par_num = 0;//get的形参个数
-	list<pair<string, bool> > par_list;//函数调用用到的实参集list<实参名,是否活跃>
+	int arg_num = 0; // par的实参个数 （par是parameter的缩写，在中间代码中代表把参数进行传值）
+	int par_num = 0; // get的形参个数
+	list<pair<string, bool> > par_list; // 函数调用用到的实参集list<实参名,是否活跃>
 
 	if (nowFunc == "program") {
 		int a = 1;
@@ -662,7 +662,7 @@ void ObjectCodeGenerator::generateCodeForBaseBlocks(int nowBaseBlockIndex) {
 		Avalue[*iter].insert(*iter);
 	}
 
-	//初始化空闲寄存器
+	// 初始化空闲寄存器
 	freeReg.clear();
 	for (int i = 0; i <= 7; i++) {
 		freeReg.push_back(string("$s") + to_string(i));
@@ -674,14 +674,15 @@ void ObjectCodeGenerator::generateCodeForBaseBlocks(int nowBaseBlockIndex) {
 			top = 8;
 		}
 		else {
-			objectCodes.push_back("sw $ra 4($sp)");//把返回地址压栈
+			objectCodes.push_back("sw $ra 4($sp)"); // 把返回地址压栈
 			top = 8;
 		}
 	}
 
-	for (vector<QuaternaryWithInfo>::iterator cIter = nowIBlock->codes.begin(); cIter != nowIBlock->codes.end(); cIter++) {//对基本块内的每一条语句
+	for (vector<QuaternaryWithInfo>::iterator cIter = nowIBlock->codes.begin(); cIter != nowIBlock->codes.end(); cIter++) {
+		// 遍历基本块内的每一条语句
 		nowQuatenary = cIter;
-		//如果是基本块的最后一条语句
+		// 如果是基本块的最后一条语句
 		if (cIter + 1 == nowIBlock->codes.end()) {
 			//如果最后一条语句是控制语句，则先将出口活跃变量保存，再进行跳转(j,call,return)
 			if (isControlOp(cIter->q.op)) {

@@ -3,8 +3,8 @@
 
 class VarInfomation {
 public:
-	int next;//待用信息
-	bool active;//活跃信息
+	int next; // 待用信息
+	bool active; // 活跃信息
 
 	VarInfomation(int next, bool active);
 	VarInfomation(const VarInfomation& other);
@@ -15,9 +15,9 @@ public:
 class QuaternaryWithInfo {
 public:
 	Quaternary q;
-	VarInfomation info1;
-	VarInfomation info2;
-	VarInfomation info3;
+	VarInfomation info1; // 第一个操作数的待用和活跃信息
+	VarInfomation info2; // 第二个操作数的待用和活跃信息
+	VarInfomation info3; // 第三个操作数的待用和活跃信息
 
 	QuaternaryWithInfo(Quaternary q, VarInfomation info1, VarInfomation info2, VarInfomation info3);
 	void output(ostream& out);
