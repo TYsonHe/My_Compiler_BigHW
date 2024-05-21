@@ -257,7 +257,8 @@ string ObjectCodeGenerator::getReg() {
 
 void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) {
 
-	for (map<string, vector<Block> >::iterator fbiter = funcBlocks->begin(); fbiter != funcBlocks->end(); fbiter++) {
+	for (map<string, vector<Block> >::iterator fbiter = funcBlocks->begin(); fbiter != funcBlocks->end(); fbiter++) 
+	{
 		// 遍历全部的函数块
 		vector<IBlock> iBlocks;
 		vector<Block>& blocks = fbiter->second;
@@ -348,7 +349,7 @@ void ObjectCodeGenerator::analyseBlock(map<string, vector<Block> >* funcBlocks) 
 			iBlocks.push_back(iBlock);
 		}
 
-		vector<map<string, VarInfomation> > symTables; // 每个基本块对应一张符号表
+		vector<map<string, VarInfomation> > symTables; // 每个函数块对应一张符号表
 		// 初始化符号表
 		for (vector<Block>::iterator biter = blocks.begin(); biter != blocks.end(); biter++) {
 			// 遍历每一个基本块
